@@ -84,7 +84,7 @@ namespace Catch {
                     });
 
                     auto analysis = Detail::analyse(*cfg, samples.data(), samples.data() + samples.size());
-                    BenchmarkStats<> stats{ CATCH_MOVE(info), CATCH_MOVE(analysis.samples), analysis.mean, analysis.standard_deviation, analysis.outliers, analysis.outlier_variance };
+                    stats = { CATCH_MOVE(info), CATCH_MOVE(analysis.samples), analysis.mean, analysis.standard_deviation, analysis.outliers, analysis.outlier_variance };
                     getResultCapture().benchmarkEnded(stats);
                 } CATCH_CATCH_ANON (TestFailureException const&) {
                     getResultCapture().benchmarkFailed("Benchmark failed due to failed assertion"_sr);
@@ -111,11 +111,53 @@ namespace Catch {
                 return true;
             }
 
+            BenchmarkStats<> stats;
         private:
             Detail::BenchmarkFunction fun;
             std::string name;
         };
-    }
+
+    struct BenchmarkResults {
+
+        BenchmarkResults( std::string&& benchmarkName )
+        : name( CATCH_MOVE(benchmarkName) ) {}
+
+        BenchmarkStats<> stats;
+
+        // sets lambda to be used in benchmark *and* executes benchmark!
+        template <typename Fun, std::enable_if_t<!Detail::is_related<Fun, Benchmark>::value, int> = 0>
+        BenchmarkResults & operator=(Fun func) {
+            auto const* cfg = getCurrentContext().getConfig();
+            Benchmark benchmark(std::string{name});
+            if (!cfg->skipBenchmarks()) {
+                benchmark = func;
+                stats = benchmark.stats;
+            }
+            return *this;
+        }
+
+        BenchmarkInfo info() const {
+            return stats.info;
+        }
+
+        FDuration mean() const {
+            return stats.mean.point;
+        }
+
+        FDuration standardDeviation() const {
+            return stats.standardDeviation.point;
+        }
+
+        OutlierClassification outliers() const {
+            return stats.outliers;
+        }
+
+        private:
+            std::string name;
+        
+    };
+    
+    } // namespace Benchmark
 } // namespace Catch
 
 #define INTERNAL_CATCH_GET_1_ARG(arg1, arg2, ...) arg1
@@ -129,12 +171,17 @@ namespace Catch {
     if( Catch::Benchmark::Benchmark BenchmarkName{name} ) \
         BenchmarkName = [&]
 
+#define INTERNAL_CATCH_BENCHMARK_STATS(BenchmarkName, name)\
+    Catch::Benchmark::BenchmarkResults{name} = [&]()
+
 #if defined(CATCH_CONFIG_PREFIX_ALL)
 
 #define CATCH_BENCHMARK(...) \
     INTERNAL_CATCH_BENCHMARK(INTERNAL_CATCH_UNIQUE_NAME(CATCH2_INTERNAL_BENCHMARK_), INTERNAL_CATCH_GET_1_ARG(__VA_ARGS__,,), INTERNAL_CATCH_GET_2_ARG(__VA_ARGS__,,))
 #define CATCH_BENCHMARK_ADVANCED(name) \
     INTERNAL_CATCH_BENCHMARK_ADVANCED(INTERNAL_CATCH_UNIQUE_NAME(CATCH2_INTERNAL_BENCHMARK_), name)
+#define BENCHMARK_STATS(name) \
+    INTERNAL_CATCH_BENCHMARK_STATS(INTERNAL_CATCH_UNIQUE_NAME(CATCH2_INTERNAL_BENCHMARK_), name)
 
 #else
 
@@ -142,6 +189,8 @@ namespace Catch {
     INTERNAL_CATCH_BENCHMARK(INTERNAL_CATCH_UNIQUE_NAME(CATCH2_INTERNAL_BENCHMARK_), INTERNAL_CATCH_GET_1_ARG(__VA_ARGS__,,), INTERNAL_CATCH_GET_2_ARG(__VA_ARGS__,,))
 #define BENCHMARK_ADVANCED(name) \
     INTERNAL_CATCH_BENCHMARK_ADVANCED(INTERNAL_CATCH_UNIQUE_NAME(CATCH2_INTERNAL_BENCHMARK_), name)
+#define BENCHMARK_STATS(name) \
+    INTERNAL_CATCH_BENCHMARK_STATS(INTERNAL_CATCH_UNIQUE_NAME(CATCH2_INTERNAL_BENCHMARK_), name)
 
 #endif
 

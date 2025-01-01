@@ -23,6 +23,8 @@
 #include <catch2/benchmark/detail/catch_estimate_clock.hpp>
 
 #include <numeric>
+#include <chrono>
+#include <thread>
 
 namespace {
     struct manual_clock {
@@ -426,6 +428,15 @@ TEST_CASE("run benchmark", "[benchmark][approvals]") {
     auto end = counting_clock::now();
 
     CHECK((end - start).count() == 2867251000);
+}
+
+TEST_CASE("Returning benchmark results","[benchmark]")
+{
+    Catch::Benchmark::BenchmarkResults results = BENCHMARK_STATS("Returning benchmark") {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    };
+
+    REQUIRE(results.mean().count() == Catch::Approx(1e7).epsilon(0.1));
 }
 
 TEST_CASE("Failing benchmarks", "[!benchmark][.approvals]") {

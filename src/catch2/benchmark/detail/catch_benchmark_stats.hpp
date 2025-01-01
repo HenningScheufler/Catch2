@@ -30,7 +30,7 @@ namespace Catch {
     };
 
     // We need to keep template parameter for backwards compatibility,
-    // but we also do not want to use the template paraneter.
+    // but we also do not want to use the template parameter.
     template <class Dummy>
     struct BenchmarkStats {
         BenchmarkInfo info;

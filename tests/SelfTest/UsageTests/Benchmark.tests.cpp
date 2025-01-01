@@ -8,6 +8,7 @@
 // Adapted from donated nonius code.
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/benchmark/catch_constructor.hpp>
 #include <catch2/generators/catch_generators_range.hpp>
@@ -44,6 +45,22 @@ TEST_CASE("Benchmark Fibonacci", "[!benchmark]") {
         return Fibonacci(35);
     };
 }
+
+TEST_CASE("Compare test runtime","[benchmark]")
+{
+    Catch::Benchmark::BenchmarkResults fbi8 = BENCHMARK_STATS("Fibonacci 8"){
+        return Fibonacci(8);
+    };
+
+    Catch::Benchmark::BenchmarkResults fib10 = BENCHMARK_STATS("Fibonacci 10"){
+        return Fibonacci(10);
+    };
+    
+    REQUIRE(fbi8.mean().count() < fib10.mean().count());
+    REQUIRE(fbi8.outliers().samples_seen == 100);
+    REQUIRE(fib10.outliers().samples_seen == 100);
+}
+
 
 TEST_CASE("Benchmark containers", "[!benchmark]") {
     static const int size = 100;
