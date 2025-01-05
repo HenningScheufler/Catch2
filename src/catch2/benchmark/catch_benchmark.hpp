@@ -140,12 +140,12 @@ namespace Catch {
             return stats.info;
         }
 
-        FDuration mean() const {
-            return stats.mean.point;
+        double mean() const {
+            return stats.mean.point.count();
         }
 
-        FDuration standardDeviation() const {
-            return stats.standardDeviation.point;
+        double standardDeviation() const {
+            return stats.standardDeviation.point.count();
         }
 
         OutlierClassification outliers() const {

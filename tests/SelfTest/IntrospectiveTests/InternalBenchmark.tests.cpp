@@ -436,7 +436,7 @@ TEST_CASE("Returning benchmark results","[benchmark]")
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
     };
 
-    REQUIRE(results.mean().count() == Catch::Approx(1e7).epsilon(0.1));
+    REQUIRE(results.mean() == Catch::Approx(1e7).epsilon(0.1));
 }
 
 TEST_CASE("Failing benchmarks", "[!benchmark][.approvals]") {

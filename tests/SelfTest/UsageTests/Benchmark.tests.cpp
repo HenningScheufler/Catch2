@@ -56,7 +56,7 @@ TEST_CASE("Compare test runtime","[benchmark]")
         return Fibonacci(10);
     };
     
-    REQUIRE(fbi8.mean().count() < fib10.mean().count());
+    REQUIRE(fbi8.mean() < fib10.mean());
     REQUIRE(fbi8.outliers().samples_seen == 100);
     REQUIRE(fib10.outliers().samples_seen == 100);
 }
